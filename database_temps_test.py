@@ -15,7 +15,7 @@ def get_temp_rh():
     GPIO.output(4, GPIO.HIGH)
     time.sleep(0.02)
     GPIO.output(4, GPIO.LOW)
-    time.sleep(0.018) #MCU start signal pulls low >18ms
+    time.sleep(0.015) #MCU start signal pulls low >18ms
     # setup for responce (20-40us) (pullup resistor 5kOhm does this)
     GPIO.setup(4, GPIO.IN, pull_up_down=GPIO.PUD_UP)
     
@@ -28,6 +28,9 @@ def get_temp_rh():
     # Readout Process:
     for i in xrange(3200):
         gpiovals.append(GPIO.input(4))
+    GPIO.cleanup()
+
+    # Now we need to parse this binary "waveform"
     high2low, low2high = [],[]
     for i in range(len(gpiovals)-1):
         if gpiovals[i]==0 and gpiovals[i+1]==1:
@@ -42,7 +45,6 @@ def get_temp_rh():
         tdate = dtnow.strftime('%Y-%m-%d_%H:%M:%S.%f')
         pickle.dump(gpiovals,open('%s_gpiovals.pkl'%tdate,'wb'))
         print('Saved pickle of data as %s',tdate)
-        #sys.exit()
     lowlen = [low2high[i+2] - high2low[i+1] for i in range(40)]
     highlen = [high2low[i+1] - low2high[i+1] for i in range(40)]
     prebitlow = int(sum(lowlen)/40.)
